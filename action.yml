@@ -15,5 +15,5 @@ runs:
 
   steps:
     - name: Generate Documentation
-      run: ./src/main.swift
+      run: $GITHUB_ACTION_PATH/src/main.swift
       shell: bash
