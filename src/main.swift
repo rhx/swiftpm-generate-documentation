@@ -42,6 +42,12 @@ struct Target: Hashable, Codable {
     var type: TargetType
 }
 
+
+let swiftBin = CommandLine.arguments[0]
+print(swiftBin)
+let outputPath = ProcessInfo.processInfo.environment["INPUT_OUTPUT_PATH"] ?? "./docs"
+let hostingBasePath = ProcessInfo.processInfo.environment["INPUT_HOSTING_BASE_PATH"]
+
 let targets: [Target] = {
     do {
         let process = Process()
@@ -92,11 +98,6 @@ let targets: [Target] = {
     }
 }()
 
-let swiftBin = CommandLine.arguments[0]
-print(swiftBin)
-let outputPath = ProcessInfo.processInfo.environment["INPUT_OUTPUT_PATH"]
-let hostingBasePath = ProcessInfo.processInfo.environment["INPUT_HOSTING_BASE_PATH"]
-
 func generateDocCDocumentation(for target: Target, swiftBin: String, hostingBasePath: String?, outputPath: String) {
     let process = Process()
     process.executableURL = URL(fileURLWithPath: swiftBin, isDirectory: false)
@@ -114,5 +115,5 @@ func generateDocCDocumentation(for target: Target, swiftBin: String, hostingBase
 }
 
 for target in targets where target.type == .swift {
-    generateDocCDocumentation(for: target, swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputPath ?? "./docs")
+    generateDocCDocumentation(for: target, swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputPath)
 }
