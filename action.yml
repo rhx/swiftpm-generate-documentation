@@ -8,15 +8,22 @@ inputs:
     default: "./docs"
   hosting-base-path:
     description: The the website will be hosted.
-    required: false
+    required: false
+  swift-version:
+    description: The version of swift used to execute the docC package plugin.
+    required: true
 
 runs:
   using: 'composite'
 
   steps:
-    - name: Generate Documentation
-      if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
-      run: |
-        swiftBin=`which swift`
-        swift $GITHUB_ACTION_PATH/src/main.swift --bin $swiftBin
-      shell: bash
+      - uses: swift-actions/setup-swift@v1
+        with:
+          swift-version: ${{ inputs.swift-version }}
+
+      - name: Generate Documentation
+        if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
+        run: |
+          swiftBin=`which swift`
+          swift $GITHUB_ACTION_PATH/src/main.swift --bin $swiftBin
+        shell: bash
