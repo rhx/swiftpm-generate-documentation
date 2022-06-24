@@ -1,5 +1,3 @@
-#! /usr/bin/swift
-
 import Foundation
 
 struct Package: Hashable, Codable {
@@ -42,10 +40,6 @@ struct Target: Hashable, Codable {
     var name: String
 
     var type: TargetType
-}
-
-func fetchTarget() {
-
 }
 
 let targets: [Target] = {
@@ -97,12 +91,18 @@ let targets: [Target] = {
     }
 }()
 
+func parseArg(_ argument: String) -> String? {
+    let raw = CommandLine.arguments.firstIndex(of: argument).flatMap { CommandLine.arguments.count <= $0 + 1 ? nil : CommandLine.arguments[$0 + 1].trimmingCharacters(in: .whitespacesAndNewlines) } ?? ""
+    return raw.isEmpty ? nil : raw
+}
+
+let swiftBin = parseArg("--bin") ?? "/usr/bin/swift"
 let outputPath = ProcessInfo.processInfo.environment["INPUT_OUTPUT_PATH"]
 let hostingBasePath = ProcessInfo.processInfo.environment["INPUT_HOSTING_BASE_PATH"]
 
-func generateDocCDocumentation(for target: Target, hostingBasePath: String?, outputPath: String) {
+func generateDocCDocumentation(for target: Target, swiftBin: String, hostingBasePath: String?, outputPath: String) {
     let process = Process()
-    process.executableURL = URL(fileURLWithPath: "/usr/bin/swift", isDirectory: false)
+    process.executableURL = URL(fileURLWithPath: swiftBin, isDirectory: false)
     process.arguments = ["package", "--allow-writing-to-directory", outputPath, "generate-documentation", "--target", target.name, "--disable-indexing", "--transform-for-static-hosting"] + (hostingBasePath != nil ? ["--hosting-base-path", hostingBasePath!] : []) + ["--output-path", outputPath]
     do {
         try process.run()
@@ -116,5 +116,5 @@ func generateDocCDocumentation(for target: Target, hostingBasePath: String?, out
 }
 
 for target in targets where target.type == .swift {
-    generateDocCDocumentation(for: target, hostingBasePath: hostingBasePath, outputPath: outputPath ?? "./docs")
+    generateDocCDocumentation(for: target, swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputPath ?? "./docs")
 }
