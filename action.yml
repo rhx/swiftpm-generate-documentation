@@ -23,7 +23,5 @@ runs:
 
       - name: Generate Documentation
         if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
-        run: |
-          swiftBin=`which swift`
-          swift $GITHUB_ACTION_PATH/src/main.swift --bin $swiftBin
+        run: swift $GITHUB_ACTION_PATH/src/main.swift
         shell: bash

@@ -92,12 +92,8 @@ let targets: [Target] = {
     }
 }()
 
-func parseArg(_ argument: String) -> String? {
-    let raw = CommandLine.arguments.firstIndex(of: argument).flatMap { CommandLine.arguments.count <= $0 + 1 ? nil : CommandLine.arguments[$0 + 1].trimmingCharacters(in: .whitespacesAndNewlines) } ?? ""
-    return raw.isEmpty ? nil : raw
-}
-
-let swiftBin = parseArg("--bin") ?? "/usr/bin/swift"
+let swiftBin = CommandLine.arguments[0]
+print(swiftBin)
 let outputPath = ProcessInfo.processInfo.environment["INPUT_OUTPUT_PATH"]
 let hostingBasePath = ProcessInfo.processInfo.environment["INPUT_HOSTING_BASE_PATH"]
 
