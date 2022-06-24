@@ -1,4 +1,4 @@
-#! /usr/bin/env swift
+#! /usr/bin/swift
 
 import Foundation
 
