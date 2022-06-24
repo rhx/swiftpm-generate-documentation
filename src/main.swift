@@ -122,7 +122,7 @@ struct Target: Hashable, Codable {
 
 }
 
-let swiftBin = "swift"
+let swiftBin = "/Users/runner/hostedtoolcache/swift-macOS/5.6.1/x64/usr/bin/swift"
 print(swiftBin)
 let outputPath = ProcessInfo.processInfo.environment["INPUT_OUTPUT_PATH"] ?? "./docs"
 let hostingBasePath = ProcessInfo.processInfo.environment["INPUT_HOSTING_BASE_PATH"]
