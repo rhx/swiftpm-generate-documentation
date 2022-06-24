@@ -15,5 +15,6 @@ runs:
 
   steps:
     - name: Generate Documentation
+      if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
       run: $GITHUB_ACTION_PATH/src/main.swift
       shell: bash
