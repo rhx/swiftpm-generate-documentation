@@ -11,5 +11,8 @@ inputs:
     required: false
 
 runs:
-  using: bash
-  main: src/main.swift
+  using: 'composite'
+
+  steps:
+    - name: Generate Documentation
+      run: ./src/main.swift
