@@ -1,0 +1,15 @@
+name: Generate Documentation
+description: Generates a documentation website from a swift package.
+
+inputs:
+  output-path:
+    decription: The path containing the generated docs.
+    required: false
+    default: "./docs"
+  hosting-base-path:
+    description: The the website will be hosted.
+    required: false
+
+runs:
+  using: bash
+  main: src/main.swift
