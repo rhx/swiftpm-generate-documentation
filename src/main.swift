@@ -49,6 +49,7 @@ let targets: [Target] = {
         process.arguments = ["package", "dump-package"]
         let pipe = Pipe()
         process.standardOutput = pipe
+        print(([process.executableURL?.path  ?? ""] + (process.arguments ?? [])).joined(separator: " "))
         try process.run()
         process.waitUntilExit()
         guard process.terminationStatus == 0 else {
@@ -104,6 +105,7 @@ func generateDocCDocumentation(for target: Target, swiftBin: String, hostingBase
     let process = Process()
     process.executableURL = URL(fileURLWithPath: swiftBin, isDirectory: false)
     process.arguments = ["package", "--allow-writing-to-directory", outputPath, "generate-documentation", "--target", target.name, "--disable-indexing", "--transform-for-static-hosting"] + (hostingBasePath != nil ? ["--hosting-base-path", hostingBasePath!] : []) + ["--output-path", outputPath]
+    print(([process.executableURL?.path  ?? ""] + (process.arguments ?? [])).joined(separator: " "))
     do {
         try process.run()
     } catch let e {
