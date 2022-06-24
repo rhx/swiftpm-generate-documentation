@@ -122,7 +122,8 @@ struct Target: Hashable, Codable {
 
 }
 
-
+print(CommandLine.arguments)
+fflush(stdout)
 let swiftBin = CommandLine.arguments[0]
 print(swiftBin)
 let outputPath = ProcessInfo.processInfo.environment["INPUT_OUTPUT_PATH"] ?? "./docs"
