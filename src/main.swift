@@ -4,13 +4,13 @@ import Foundation
 
 struct Package: Hashable, Codable {
 
-    var target: [Target]
+    var targets: [Target]
 
 }
 
 struct Target: Hashable, Codable {
 
-    enum Type: String, Hashable, Codable {
+    enum TargetType: String, Hashable, Codable {
 
         enum CodingKeys: String, CodingKey {
             case type
@@ -34,23 +34,23 @@ struct Target: Hashable, Codable {
 
         func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
-            container.encode(rawValue, forKey: .type)
+            try container.encode(rawValue, forKey: .type)
         }
 
     }
 
     var name: String
 
-    var type: Type
+    var type: TargetType
 }
 
 func fetchTarget() {
 
 }
 
-let targets: [Target] = try {
+let targets: [Target] = {
     do {
-        let process = try Process()
+        let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/swift", isDirectory: false)
         process.arguments = ["package", "dump-package"]
         let pipe = Pipe()
@@ -60,7 +60,7 @@ let targets: [Target] = try {
         guard process.terminationStatus == 0 else {
             fatalError("Unable to dump package")
         }
-        guard let data = try pipe.fileHandleForReading.readtoEnd() else {
+        guard let data = try pipe.fileHandleForReading.readToEnd() else {
             fatalError("Failed to read package dump")
         }
         let decoder = JSONDecoder()
@@ -68,7 +68,7 @@ let targets: [Target] = try {
         let fm = FileManager.default
         let srcDir = URL(fileURLWithPath: fm.currentDirectoryPath, isDirectory: true).appendingPathComponent("Sources", isDirectory: true)
         return package.targets.compactMap {
-            if $0.type == .unknown {
+            if $0.type == .unsupported {
                 return nil
             }
             if $0.type != .regular {
@@ -78,8 +78,8 @@ let targets: [Target] = try {
             guard let enumerator = fm.enumerator(at: targetDir, includingPropertiesForKeys: nil) else {
                 return nil
             }
-            let files = enumerator.allObjects.compactMap {
-                guard let url = $0 as? URL, !url.isDirectory else {
+            let files: [URL] = enumerator.allObjects.compactMap {
+                guard let url = $0 as? URL, !url.hasDirectoryPath else {
                     return nil
                 }
                 return url
@@ -97,14 +97,18 @@ let targets: [Target] = try {
     }
 }()
 
-let outputPath = ProcessInfo.environment["INPUT_OUTPUT_PATH"]
-let hostingBasePath = ProcessInfo.environment["INPUT_HOSTING_BASE_PATH"]
+let outputPath = ProcessInfo.processInfo.environment["INPUT_OUTPUT_PATH"]
+let hostingBasePath = ProcessInfo.processInfo.environment["INPUT_HOSTING_BASE_PATH"]
 
 func generateDocCDocumentation(for target: Target, hostingBasePath: String?, outputPath: String) {
     let process = Process()
     process.executableURL = URL(fileURLWithPath: "/usr/bin/swift", isDirectory: false)
     process.arguments = ["package", "--allow-writing-to-directory", outputPath, "generate-documentation", "--target", target.name, "--disable-indexing", "--transform-for-static-hosting"] + (hostingBasePath != nil ? ["--hosting-base-path", hostingBasePath!] : []) + ["--output-path", outputPath]
-    process.run()
+    do {
+        try process.run()
+    } catch let e {
+        fatalError(e.localizedDescription)
+    }
     process.waitUntilExit()
     guard process.terminationStatus == 0 else {
         fatalError("Unable to generate documentation for target \(target.name)")
