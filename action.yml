@@ -16,3 +16,4 @@ runs:
   steps:
     - name: Generate Documentation
       run: ./src/main.swift
+      shell: bash
