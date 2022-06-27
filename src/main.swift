@@ -138,6 +138,21 @@ do {
         exit(EXIT_SUCCESS)
     }
     try package.generateDocumentation(swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputPath)
+    if package.targets.filter({ $0.type != .unsupported }).count == 1, let first = package.targets.first(where: { $0.type != .unsupported }) {
+        let indexURL = outputPath.appendingPathComponent("index.html", isDirectory: false)
+        let content = """
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <title>\(first.name)</title>
+                <meta http-equiv = "refresh" content = "0; url = /\(hostingBasePath.map { $0 + "/" })\(first.name.lowercased())" />
+            </head>
+            <body>
+                <p>Redirecting</p>
+            </body>
+            """
+        try content.write(to: indexURL, atomically: true, encoding: .utf8)
+    }
 } catch let e {
     fatalError(e.localizedDescription)
 }
