@@ -1,8 +1,28 @@
 import Foundation
 
-struct Package: Hashable, Codable {
+struct Package: Hashable, Decodable {
+
+    enum CodingKeys: CodingKey {
+
+        case targets
+
+    }
 
     var targets: [Target]
+
+    init(targets: [Target]) {
+        self.targets = targets
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        do {
+            let targets = try container.decode([Target].self, forKey: .targets)
+            self.init(targets: targets)
+        } catch let e {
+            fatalError("Targets decoding: \(e.localizedDescription)")
+        }
+    }
 
     init(dumpPackageUsing swiftBin: String = "/usr/bin/swift") throws {
         let process = Process()
@@ -59,40 +79,40 @@ struct Package: Hashable, Codable {
 
 }
 
-struct Target: Hashable, Codable {
+struct Target: Hashable, Decodable {
 
-    enum TargetType: String, Hashable, Codable {
-
-        enum CodingKeys: String, CodingKey {
-            case type
-        }
+    enum TargetType: String, Hashable {
 
         case swift
         case C
         case regular
         case unsupported
 
-        init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            let type = try container.decode(String.self, forKey: .type)
-            switch type {
-            case "swift", "C", "regular":
-                self = .init(rawValue: type)!
-            default:
-                self = .unsupported
-            }
-        }
+    }
 
-        func encode(to encoder: Encoder) throws {
-            var container = encoder.container(keyedBy: CodingKeys.self)
-            try container.encode(rawValue, forKey: .type)
-        }
-
+    enum CodingKeys: CodingKey {
+            
+            case name
+            case type
+    
     }
 
     var name: String
 
     var type: TargetType
+
+    init(name: String, type: TargetType) {
+        self.name = name
+        self.type = type
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let name = try container.decode(String.self, forKey: .name)
+        let typeRawValue = try container.decode(String.self, forKey: .type)
+        let type = TargetType(rawValue: typeRawValue) ?? .unsupported
+        self.init(name: name, type: type)
+    }
 
     func generateDocumentation(swiftBin: String = "/usr/bin/swift", hostingBasePath: String?, outputPath: String = "./docs") throws {
         switch type {
