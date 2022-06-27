@@ -2,26 +2,10 @@ import Foundation
 
 struct Package: Hashable, Decodable {
 
-    enum CodingKeys: CodingKey {
-
-        case targets
-
-    }
-
     var targets: [Target]
 
     init(targets: [Target]) {
         self.targets = targets
-    }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        do {
-            let targets = try container.decode([Target].self, forKey: .targets)
-            self.init(targets: targets)
-        } catch let e {
-            fatalError("Targets decoding: \(e.localizedDescription)")
-        }
     }
 
     init(dumpPackageUsing swiftBin: String = "/usr/bin/swift") throws {
@@ -71,7 +55,7 @@ struct Package: Hashable, Decodable {
         self = package
     }
 
-    func generateDocumentation(swiftBin: String = "/usr/bin/swift", hostingBasePath: String?, outputPath: String = "./docs") throws {
+    func generateDocumentation(swiftBin: String = "/usr/bin/swift", hostingBasePath: String?, outputPath: URL) throws {
         for target in targets where target.type == .swift || target.type == .C {
             try target.generateDocumentation(swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputPath)
         }
@@ -114,7 +98,7 @@ struct Target: Hashable, Decodable {
         self.init(name: name, type: type)
     }
 
-    func generateDocumentation(swiftBin: String = "/usr/bin/swift", hostingBasePath: String?, outputPath: String = "./docs") throws {
+    func generateDocumentation(swiftBin: String = "/usr/bin/swift", hostingBasePath: String?, outputPath: URL) throws {
         switch type {
         case .swift:
             try generateSwiftDocumentation(swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputPath)
@@ -124,10 +108,10 @@ struct Target: Hashable, Decodable {
     }
     
 
-    private func generateSwiftDocumentation(swiftBin: String, hostingBasePath: String?, outputPath: String) throws {
+    private func generateSwiftDocumentation(swiftBin: String, hostingBasePath: String?, outputPath: URL) throws {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: swiftBin, isDirectory: false)
-        process.arguments = ["package", "--allow-writing-to-directory", outputPath, "generate-documentation", "--target", self.name, "--disable-indexing", "--transform-for-static-hosting"] + (hostingBasePath != nil ? ["--hosting-base-path", hostingBasePath!] : []) + ["--output-path", outputPath]
+        process.arguments = ["package", "--allow-writing-to-directory", outputPath.path, "generate-documentation", "--target", self.name, "--disable-indexing", "--transform-for-static-hosting"] + (hostingBasePath != nil ? ["--hosting-base-path", hostingBasePath!] : []) + ["--output-path", outputPath.path]
         print(([process.executableURL?.path  ?? ""] + (process.arguments ?? [])).joined(separator: " "))
         do {
             try process.run()
@@ -144,11 +128,15 @@ struct Target: Hashable, Decodable {
 
 let swiftBin = "/Users/runner/hostedtoolcache/swift-macOS/5.6.1/x64/usr/bin/swift"
 print(swiftBin)
-let outputPath = ProcessInfo.processInfo.environment["INPUT_OUTPUT_PATH"] ?? "./docs"
+let outputPath = ProcessInfo.processInfo.environment["INPUT_OUTPUT_PATH"].map { URL(fileURLWithPath: $0, isDirectory: true) } ?? URL(fileURLWithPath: "./docs", isDirectory: true)
 let hostingBasePath = ProcessInfo.processInfo.environment["INPUT_HOSTING_BASE_PATH"]
 
 do {
     let package = try Package(dumpPackageUsing: swiftBin)
+    guard package.targets.contains(where: { $0.type != .unsupported }) else {
+        print("warning: No targets to document found.")
+        exit(EXIT_SUCCESS)
+    }
     try package.generateDocumentation(swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputPath)
 } catch let e {
     fatalError(e.localizedDescription)
