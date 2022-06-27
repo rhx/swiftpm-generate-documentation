@@ -9,6 +9,7 @@ inputs:
   hosting-base-path:
     description: The the website will be hosted.
     required: false
+    default: ${{ github.event.repository.name }}
   swift-version:
     description: The version of swift used to execute the docC package plugin.
     required: true
