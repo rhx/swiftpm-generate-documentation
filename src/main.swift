@@ -136,7 +136,7 @@ func parseArg(_ argument: String) -> String? {
 let swiftBin = "/Users/runner/hostedtoolcache/swift-macOS/5.6.1/x64/usr/bin/swift"
 print(swiftBin)
 let outputPath = parseArg("--output-path").map { URL(fileURLWithPath: $0, isDirectory: true) } ?? URL(fileURLWithPath: "./docs", isDirectory: true)
-let hostingBasePath = parseArg("hosting-base-path")
+let hostingBasePath = parseArg("--hosting-base-path")
 
 do {
     let package = try Package(dumpPackageUsing: swiftBin)
