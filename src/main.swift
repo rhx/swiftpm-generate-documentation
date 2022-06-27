@@ -145,7 +145,7 @@ do {
             <html lang="en">
             <head>
                 <title>\(first.name)</title>
-                <meta http-equiv = "refresh" content = "0; url = /\(hostingBasePath.map { $0 + "/" })\(first.name.lowercased())" />
+                <meta http-equiv = "refresh" content = "0; url = /\(hostingBasePath.map { $0 + "/" } ?? "")\(first.name.lowercased())" />
             </head>
             <body>
                 <p>Redirecting</p>
