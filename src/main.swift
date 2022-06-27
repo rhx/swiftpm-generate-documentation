@@ -111,13 +111,15 @@ struct Target: Hashable, Decodable {
     private func generateSwiftDocumentation(swiftBin: String, hostingBasePath: String?, outputPath: URL) throws {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: swiftBin, isDirectory: false)
-        process.arguments = ["package", "--allow-writing-to-directory", outputPath.path, "generate-documentation", "--target", self.name, "--disable-indexing", "--transform-for-static-hosting"] + (hostingBasePath != nil ? ["--hosting-base-path", hostingBasePath!] : []) + ["--output-path", outputPath.path]
-        print(([process.executableURL?.path  ?? ""] + (process.arguments ?? [])).joined(separator: " "))
-        do {
-            try process.run()
-        } catch let e {
-            fatalError(e.localizedDescription)
-        }
+        process.arguments = [
+            "package",
+            "--allow-writing-to-directory", outputPath.path,
+            "generate-documentation",
+            "--target", self.name,
+            "--disable-indexing",
+            "--transform-for-static-hosting"
+        ] + (hostingBasePath != nil ? ["--hosting-base-path", hostingBasePath!] : []) + ["--output-path", outputPath.path]
+        try process.run()
         process.waitUntilExit()
         guard process.terminationStatus == 0 else {
             fatalError("Unable to generate documentation for target \(self.name)")
@@ -130,6 +132,8 @@ let swiftBin = "/Users/runner/hostedtoolcache/swift-macOS/5.6.1/x64/usr/bin/swif
 print(swiftBin)
 let outputPath = ProcessInfo.processInfo.environment["INPUT_OUTPUT_PATH"].map { URL(fileURLWithPath: $0, isDirectory: true) } ?? URL(fileURLWithPath: "./docs", isDirectory: true)
 let hostingBasePath = ProcessInfo.processInfo.environment["INPUT_HOSTING_BASE_PATH"]
+
+fatalError("\(ProcessInfo.processInfo.environment)")
 
 do {
     let package = try Package(dumpPackageUsing: swiftBin)
