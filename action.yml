@@ -24,5 +24,5 @@ runs:
 
       - name: Generate Documentation
         if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
-        run: swift $GITHUB_ACTION_PATH/src/main.swift
+        run: swift $GITHUB_ACTION_PATH/src/main.swift --hosting-base-path ${{ inputs.hosting-base-path }} --output-path ${{ inputs.output-path }}
         shell: bash

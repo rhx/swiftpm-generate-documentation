@@ -128,12 +128,15 @@ struct Target: Hashable, Decodable {
 
 }
 
+func parseArg(_ argument: String) -> String? {
+    let raw = CommandLine.arguments.firstIndex(of: argument).flatMap { CommandLine.arguments.count <= $0 + 1 ? nil : CommandLine.arguments[$0 + 1].trimmingCharacters(in: .whitespacesAndNewlines) } ?? ""
+    return raw.prefix(2) == "--" || raw.isEmpty ? nil : raw
+}
+
 let swiftBin = "/Users/runner/hostedtoolcache/swift-macOS/5.6.1/x64/usr/bin/swift"
 print(swiftBin)
-let outputPath = ProcessInfo.processInfo.environment["INPUT_OUTPUT_PATH"].map { URL(fileURLWithPath: $0, isDirectory: true) } ?? URL(fileURLWithPath: "./docs", isDirectory: true)
-let hostingBasePath = ProcessInfo.processInfo.environment["INPUT_HOSTING_BASE_PATH"]
-
-fatalError("\(ProcessInfo.processInfo.environment)")
+let outputPath = parseArg("--output-path").map { URL(fileURLWithPath: $0, isDirectory: true) } ?? URL(fileURLWithPath: "./docs", isDirectory: true)
+let hostingBasePath = parseArg("hosting-base-path")
 
 do {
     let package = try Package(dumpPackageUsing: swiftBin)
