@@ -8,7 +8,11 @@ struct Package: Hashable, Decodable {
         self.targets = targets
     }
 
-    init(dumpPackageUsing swiftBin: String = "/usr/bin/swift") throws {
+    init(dumpPackageUsing swiftBin: String = "/usr/bin/swift", inDirectory workingDirectory: URL) throws {
+        let fm = FileManager.default
+        let currentDirectoryPath = fm.currentDirectoryPath
+        fm.changeCurrentDirectoryPath(workingDirectory.path)
+        defer { fm.changeCurrentDirectoryPath(currentDirectoryPath) }
         let process = Process()
         process.executableURL = URL(fileURLWithPath: swiftBin, isDirectory: false)
         process.arguments = ["package", "dump-package"]
@@ -25,7 +29,6 @@ struct Package: Hashable, Decodable {
         }
         let decoder = JSONDecoder()
         var package = try decoder.decode(Package.self, from: data)
-        let fm = FileManager.default
         let srcDir = URL(fileURLWithPath: fm.currentDirectoryPath, isDirectory: true).appendingPathComponent("Sources", isDirectory: true)
         package.targets = package.targets.compactMap {
             if $0.type == .unsupported {
@@ -55,7 +58,11 @@ struct Package: Hashable, Decodable {
         self = package
     }
 
-    func generateDocumentation(swiftBin: String = "/usr/bin/swift", hostingBasePath: String?, outputPath: URL) throws {
+    func generateDocumentation(swiftBin: String = "/usr/bin/swift", inDirectory workingDirectory: URL, hostingBasePath: String?, outputPath: URL) throws {
+        let fm = FileManager.default
+        let currentDirectoryPath = fm.currentDirectoryPath
+        fm.changeCurrentDirectoryPath(workingDirectory.path)
+        defer { fm.changeCurrentDirectoryPath(currentDirectoryPath) }
         for target in targets where target.type == .swift || target.type == .C {
             try target.generateDocumentation(swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputPath)
         }
@@ -137,14 +144,15 @@ let swiftBin = "/Users/runner/hostedtoolcache/swift-macOS/5.6.1/x64/usr/bin/swif
 print(swiftBin)
 let outputPath = parseArg("--output-path").map { URL(fileURLWithPath: $0, isDirectory: true) } ?? URL(fileURLWithPath: "./docs", isDirectory: true)
 let hostingBasePath = parseArg("--hosting-base-path")
+let workingDirectory = URL(fileURLWithPath: parseArg("--working-directory") ?? FileManager.default.currentDirectoryPath, isDirectory: true)
 
 do {
-    let package = try Package(dumpPackageUsing: swiftBin)
+    let package = try Package(dumpPackageUsing: swiftBin, inDirectory: workingDirectory)
     guard package.targets.contains(where: { $0.type != .unsupported }) else {
         print("warning: No targets to document found.")
         exit(EXIT_SUCCESS)
     }
-    try package.generateDocumentation(swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputPath)
+    try package.generateDocumentation(swiftBin: swiftBin, inDirectory: workingDirectory, hostingBasePath: hostingBasePath, outputPath: outputPath)
     if package.targets.filter({ $0.type != .unsupported }).count == 1, let first = package.targets.first(where: { $0.type != .unsupported }) {
         let indexURL = outputPath.appendingPathComponent("index.html", isDirectory: false)
         let content = """
