@@ -6,6 +6,10 @@ inputs:
     decription: The path containing the generated docs.
     required: false
     default: "./docs"
+  working-directory:
+    description: The directory containing the swift package.
+    required: false
+    default: ""
   hosting-base-path:
     description: The the website will be hosted.
     required: false
