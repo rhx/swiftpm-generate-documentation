@@ -146,12 +146,17 @@ let outputPath = parseArg("--output-path").map { URL(fileURLWithPath: $0, isDire
 let hostingBasePath = parseArg("--hosting-base-path")
 let workingDirectory = URL(fileURLWithPath: parseArg("--working-directory") ?? FileManager.default.currentDirectoryPath, isDirectory: true)
 
+let package: Package
 do {
-    let package = try Package(dumpPackageUsing: swiftBin, inDirectory: workingDirectory)
+    package = try Package(dumpPackageUsing: swiftBin, inDirectory: workingDirectory)
     guard package.targets.contains(where: { $0.type != .unsupported }) else {
         print("warning: No targets to document found.")
         exit(EXIT_SUCCESS)
     }
+} catch let e {
+    fatalError("Error parsing Package.swift: " + e.localizedDescription)
+}
+do {
     try package.generateDocumentation(swiftBin: swiftBin, inDirectory: workingDirectory, hostingBasePath: hostingBasePath, outputPath: outputPath)
     if package.targets.filter({ $0.type != .unsupported }).count == 1, let first = package.targets.first(where: { $0.type != .unsupported }) {
         let indexURL = outputPath.appendingPathComponent("index.html", isDirectory: false)
@@ -169,5 +174,5 @@ do {
         try content.write(to: indexURL, atomically: true, encoding: .utf8)
     }
 } catch let e {
-    fatalError(e.localizedDescription)
+    fatalError("Error Generating Documentation: " + e.localizedDescription)
 }
