@@ -9,11 +9,13 @@ struct Package: Hashable, Decodable {
     }
 
     init(dumpPackageUsing swiftBin: String = "/usr/bin/swift") throws {
+        let fm = FileManager.default
         let process = Process()
         process.executableURL = URL(fileURLWithPath: swiftBin, isDirectory: false)
         process.arguments = ["package", "dump-package"]
         let pipe = Pipe()
         process.standardOutput = pipe
+        process.currentDirectoryURL = URL(fileURLWithPath: fm.currentDirectoryPath)
         print(([process.executableURL?.path  ?? ""] + (process.arguments ?? [])).joined(separator: " "))
         try process.run()
         process.waitUntilExit()
@@ -25,7 +27,6 @@ struct Package: Hashable, Decodable {
         }
         let decoder = JSONDecoder()
         var package = try decoder.decode(Package.self, from: data)
-        let fm = FileManager.default
         let srcDir = URL(fileURLWithPath: fm.currentDirectoryPath, isDirectory: true).appendingPathComponent("Sources", isDirectory: true)
         package.targets = package.targets.compactMap {
             if $0.type == .unsupported {
@@ -109,6 +110,7 @@ struct Target: Hashable, Decodable {
     
 
     private func generateSwiftDocumentation(swiftBin: String, hostingBasePath: String?, outputPath: URL) throws {
+        let fm = FileManager.default
         let process = Process()
         process.executableURL = URL(fileURLWithPath: swiftBin, isDirectory: false)
         process.arguments = [
@@ -119,6 +121,7 @@ struct Target: Hashable, Decodable {
             "--disable-indexing",
             "--transform-for-static-hosting"
         ] + (hostingBasePath != nil ? ["--hosting-base-path", hostingBasePath!] : []) + ["--output-path", outputPath.path]
+        process.currentDirectoryURL = URL(fileURLWithPath: fm.currentDirectoryPath)
         try process.run()
         process.waitUntilExit()
         guard process.terminationStatus == 0 else {
@@ -133,11 +136,22 @@ func parseArg(_ argument: String) -> String? {
     return raw.prefix(2) == "--" || raw.isEmpty ? nil : raw
 }
 
+func parsePath(_ argument: String) -> URL? {
+    parseArg(argument).map { $0.hasPrefix("/") ? $0 :  FileManager.default.currentDirectoryPath + "/" + $0 }.map { URL(fileURLWithPath: $0, isDirectory: true) }
+}
+
+#if os(macOS)
 let swiftBin = "/Users/runner/hostedtoolcache/swift-macOS/5.6.1/x64/usr/bin/swift"
+#else
+let swiftBin = "/opt/hostedtoolcache/swift-Ubuntu/5.6.1/x64/usr/bin/swift"
+#endif
 print(swiftBin)
-let outputPath = parseArg("--output-path").map { URL(fileURLWithPath: $0, isDirectory: true) } ?? URL(fileURLWithPath: "./docs", isDirectory: true)
+let outputPath = parsePath("--output-path") ?? URL(fileURLWithPath: FileManager.default.currentDirectoryPath + "/docs", isDirectory: true)
 let hostingBasePath = parseArg("--hosting-base-path")
-let workingDirectory = parseArg("--working-directory") ?? FileManager.default.currentDirectoryPath
+let workingDirectory = parsePath("--working-directory") ?? URL(fileURLWithPath: FileManager.default.currentDirectoryPath, isDirectory: true)
+
+let fm = FileManager.default
+fm.changeCurrentDirectoryPath(workingDirectory.path)
 
 let package: Package
 do {
