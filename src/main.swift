@@ -147,7 +147,7 @@ let swiftBin = "/opt/hostedtoolcache/swift-Ubuntu/5.6.1/x64/usr/bin/swift"
 #endif
 print(swiftBin)
 let currentDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath, isDirectory: true)
-let hostingBasePath = parseArg("--hosting-base-path")
+let hostingBasePath = parseArg("--hosting-base-path").flatMap { $0 == "/" ? nil : $0 }
 let workingDirectory = parsePath("--working-directory", relativeTo: currentDirectory) ?? currentDirectory
 let outputPath = parsePath("--output-path", relativeTo: workingDirectory) ?? workingDirectory.appendingPathComponent("docs", isDirectory: true)
 
