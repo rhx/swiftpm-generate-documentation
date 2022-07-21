@@ -198,7 +198,7 @@ do {
             """
         let targetContent = targets.map {
             """
-            <h2><a href="\(documentationDirectory)/\($0)">\($0)</a></h2>
+            <h2><a href="\(documentationDirectory)/\($0.lowercased())">\($0)</a></h2>
             """
         }.joined(separator: "\n")
         let tail = "</body>\n</html>"
