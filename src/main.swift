@@ -2,9 +2,12 @@ import Foundation
 
 struct Package: Hashable, Decodable {
 
+    var name: String
+
     var targets: [Target]
 
-    init(targets: [Target]) {
+    init(name: String, targets: [Target]) {
+        self.name = name
         self.targets = targets
     }
 
@@ -166,19 +169,40 @@ do {
 }
 do {
     try package.generateDocumentation(swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputPath)
+    let indexURL = outputPath.appendingPathComponent("index.html", isDirectory: false)
+    let documentationDirectory = "/" + (hostingBasePath.map { $0 + "/" } ?? "") + "documentation"
     if package.targets.filter({ $0.type != .unsupported }).count == 1, let first = package.targets.first(where: { $0.type != .unsupported }) {
-        let indexURL = outputPath.appendingPathComponent("index.html", isDirectory: false)
         let content = """
             <!DOCTYPE html>
             <html lang="en">
             <head>
                 <title>\(first.name)</title>
-                <meta http-equiv = "refresh" content = "0; url = /\(hostingBasePath.map { $0 + "/" } ?? "")documentation/\(first.name.lowercased())" />
+                <meta http-equiv = "refresh" content = "0; url = \(documentationDirectory)/\(first.name.lowercased())" />
             </head>
             <body>
                 <p>Redirecting</p>
             </body>
+            </html>
             """
+        try content.write(to: indexURL, atomically: true, encoding: .utf8)
+    } else {
+        let targets = package.targets.filter { $0.type != .unsupported }.map { $0.name }.sorted()
+        let head = """
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <title>\(package.name) Documentation</title>
+            </head>
+            <body>
+            <h1>Targets</h1>
+            """
+        let targetContent = targets.map {
+            """
+            <h2><a href="\(documentationDirectory)/\($0)">\($0)</a></h2>
+            """
+        }.joined(separator: "\n")
+        let tail = "</body>\n</html>"
+        let content = head + "\n" + targetContent + "\n" + tail
         try content.write(to: indexURL, atomically: true, encoding: .utf8)
     }
 } catch let e {
