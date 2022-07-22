@@ -115,6 +115,7 @@ struct Target: Hashable, Decodable {
     private func generateSwiftDocumentation(swiftBin: String, hostingBasePath: String?, outputPath: URL) throws {
         let fm = FileManager.default
         let process = Process()
+        let hostingBasePath = hostingBasePath.map { "/" + $0.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + "/" + self.name } ?? self.name
         process.executableURL = URL(fileURLWithPath: swiftBin, isDirectory: false)
         process.arguments = [
             "package",
@@ -122,8 +123,10 @@ struct Target: Hashable, Decodable {
             "generate-documentation",
             "--target", self.name,
             "--disable-indexing",
-            "--transform-for-static-hosting"
-        ] + (hostingBasePath != nil ? ["--hosting-base-path", hostingBasePath!] : []) + ["--output-path", outputPath.path]
+            "--transform-for-static-hosting",
+            "--hosting-base-path", hostingBasePath,
+            "--output-path", outputPath.appendingPathComponent(self.name, isDirectory: true).path
+        ]
         process.currentDirectoryURL = URL(fileURLWithPath: fm.currentDirectoryPath)
         try process.run()
         process.waitUntilExit()
@@ -168,10 +171,11 @@ do {
     fatalError("Error parsing Package.swift: " + e.localizedDescription)
 }
 do {
+    try FileManager.default.createDirectory(at: outputPath, withIntermediateDirectories: true)
     try package.generateDocumentation(swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputPath)
     let indexURL = outputPath.appendingPathComponent("index.html", isDirectory: false)
-    let documentationDirectory = "/" + (hostingBasePath.map { $0 + "/" } ?? "") + "documentation"
     if package.targets.filter({ $0.type != .unsupported }).count == 1, let first = package.targets.first(where: { $0.type != .unsupported }) {
+        let documentationDirectory = "/" + (hostingBasePath.map { $0 + "/" } ?? "") + first.name + "/documentation"
         let content = """
             <!DOCTYPE html>
             <html lang="en">
@@ -197,7 +201,8 @@ do {
             <h1>Targets</h1>
             """
         let targetContent = targets.map {
-            """
+            let documentationDirectory = "/" + (hostingBasePath.map { $0 + "/" } ?? "") + $0 + "/documentation"
+            return """
             <h2><a href="\(documentationDirectory)/\($0.lowercased())">\($0)</a></h2>
             """
         }.joined(separator: "\n")
