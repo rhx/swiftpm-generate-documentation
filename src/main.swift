@@ -59,16 +59,24 @@ struct Package: Hashable, Decodable {
         self = package
     }
 
-    /*
     private func dumpSymbolGraph(using swiftBin: String, minimumAccessLevel: String) throws {
+        let fm = FileManager.default
         let process = Process()
         process.executableURL = URL(fileURLWithPath: swiftBin, isDirectory: false)
         process.arguments = ["package", "dump-symbol-graph", "--minimum-access-level", minimumAccessLevel]
-    }*/
+        process.currentDirectoryURL = URL(fileURLWithPath: fm.currentDirectoryPath)
+        print(([process.executableURL?.path  ?? ""] + (process.arguments ?? [])).joined(separator: " "))
+        try process.run()
+        process.waitUntilExit()
+        guard process.terminationStatus == 0 else {
+            fatalError("Unable to dump symbol graph")
+        }
+    }
 
     func generateDocumentation(swiftBin: String = "/usr/bin/swift", hostingBasePath: String?, outputPath: URL, minimumAccessLevel: String) throws {
+        try self.dumpSymbolGraph(using: swiftBin, minimumAccessLevel: minimumAccessLevel)
         for target in targets where target.type == .swift || target.type == .C {
-            try target.generateDocumentation(swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputPath, minimumAccessLevel: minimumAccessLevel)
+            try target.generateDocumentation(swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputPath)
         }
     }
 
@@ -109,17 +117,17 @@ struct Target: Hashable, Decodable {
         self.init(name: name, type: type)
     }
 
-    func generateDocumentation(swiftBin: String = "/usr/bin/swift", hostingBasePath: String?, outputPath: URL, minimumAccessLevel: String) throws {
+    func generateDocumentation(swiftBin: String = "/usr/bin/swift", hostingBasePath: String?, outputPath: URL) throws {
         switch type {
         case .swift:
-            try generateSwiftDocumentation(swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputPath, minimumAccessLevel: minimumAccessLevel)
+            try generateSwiftDocumentation(swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputPath)
         default:
             return
         }
     }
     
 
-    private func generateSwiftDocumentation(swiftBin: String, hostingBasePath: String?, outputPath: URL, minimumAccessLevel: String) throws {
+    private func generateSwiftDocumentation(swiftBin: String, hostingBasePath: String?, outputPath: URL) throws {
         let fm = FileManager.default
         let process = Process()
         let hostingBasePath = hostingBasePath.map { "/" + $0.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + "/" + self.name } ?? self.name
@@ -127,10 +135,6 @@ struct Target: Hashable, Decodable {
         process.arguments = [
             "package",
             "--allow-writing-to-directory", outputPath.path,
-            "-Xswiftc",
-            "-symbol-graph-minimum-access-level",
-            "-Xswiftc",
-            minimumAccessLevel,
             "generate-documentation",
             "--target", self.name,
             "--disable-indexing",
