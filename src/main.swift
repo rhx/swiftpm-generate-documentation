@@ -59,9 +59,16 @@ struct Package: Hashable, Decodable {
         self = package
     }
 
-    func generateDocumentation(swiftBin: String = "/usr/bin/swift", hostingBasePath: String?, outputPath: URL) throws {
+    /*
+    private func dumpSymbolGraph(using swiftBin: String, minimumAccessLevel: String) throws {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: swiftBin, isDirectory: false)
+        process.arguments = ["package", "dump-symbol-graph", "--minimum-access-level", minimumAccessLevel]
+    }*/
+
+    func generateDocumentation(swiftBin: String = "/usr/bin/swift", hostingBasePath: String?, outputPath: URL, minimumAccessLevel: String) throws {
         for target in targets where target.type == .swift || target.type == .C {
-            try target.generateDocumentation(swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputPath)
+            try target.generateDocumentation(swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputPath, minimumAccessLevel: minimumAccessLevel)
         }
     }
 
@@ -102,17 +109,17 @@ struct Target: Hashable, Decodable {
         self.init(name: name, type: type)
     }
 
-    func generateDocumentation(swiftBin: String = "/usr/bin/swift", hostingBasePath: String?, outputPath: URL) throws {
+    func generateDocumentation(swiftBin: String = "/usr/bin/swift", hostingBasePath: String?, outputPath: URL, minimumAccessLevel: String) throws {
         switch type {
         case .swift:
-            try generateSwiftDocumentation(swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputPath)
+            try generateSwiftDocumentation(swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputPath, minimumAccessLevel: minimumAccessLevel)
         default:
             return
         }
     }
     
 
-    private func generateSwiftDocumentation(swiftBin: String, hostingBasePath: String?, outputPath: URL) throws {
+    private func generateSwiftDocumentation(swiftBin: String, hostingBasePath: String?, outputPath: URL, minimumAccessLevel: String) throws {
         let fm = FileManager.default
         let process = Process()
         let hostingBasePath = hostingBasePath.map { "/" + $0.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + "/" + self.name } ?? self.name
@@ -125,7 +132,11 @@ struct Target: Hashable, Decodable {
             "--disable-indexing",
             "--transform-for-static-hosting",
             "--hosting-base-path", hostingBasePath,
-            "--output-path", outputPath.appendingPathComponent(self.name, isDirectory: true).path
+            "--output-path", outputPath.appendingPathComponent(self.name, isDirectory: true).path,
+            "-Xswiftc",
+            "-symbol-graph-minimum-access-level",
+            "-Xswiftc",
+            minimumAccessLevel
         ]
         process.currentDirectoryURL = URL(fileURLWithPath: fm.currentDirectoryPath)
         try process.run()
@@ -153,6 +164,7 @@ let swiftBin = "/opt/hostedtoolcache/swift-Ubuntu/5.6.1/x64/usr/bin/swift"
 #endif
 print(swiftBin)
 let currentDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath, isDirectory: true)
+let minimumAccessLevel = parseArg("--minimum-access-level") ?? "public"
 let hostingBasePath = parseArg("--hosting-base-path").flatMap { $0 == "/" ? nil : $0 }
 let workingDirectory = parsePath("--working-directory", relativeTo: currentDirectory) ?? currentDirectory
 let outputPath = parsePath("--output-path", relativeTo: workingDirectory) ?? workingDirectory.appendingPathComponent("docs", isDirectory: true)
@@ -172,7 +184,7 @@ do {
 }
 do {
     try FileManager.default.createDirectory(at: outputPath, withIntermediateDirectories: true)
-    try package.generateDocumentation(swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputPath)
+    try package.generateDocumentation(swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputPath, minimumAccessLevel: minimumAccessLevel)
     let indexURL = outputPath.appendingPathComponent("index.html", isDirectory: false)
     if package.targets.filter({ $0.type != .unsupported }).count == 1, let first = package.targets.first(where: { $0.type != .unsupported }) {
         let documentationDirectory = "/" + (hostingBasePath.map { $0 + "/" } ?? "") + first.name + "/documentation"
