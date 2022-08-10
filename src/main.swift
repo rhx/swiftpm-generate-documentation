@@ -127,16 +127,16 @@ struct Target: Hashable, Decodable {
         process.arguments = [
             "package",
             "--allow-writing-to-directory", outputPath.path,
+            "-Xswiftc",
+            "-symbol-graph-minimum-access-level",
+            "-Xswiftc",
+            minimumAccessLevel,
             "generate-documentation",
             "--target", self.name,
             "--disable-indexing",
             "--transform-for-static-hosting",
             "--hosting-base-path", hostingBasePath,
-            "--output-path", outputPath.appendingPathComponent(self.name, isDirectory: true).path,
-            "-Xswiftc",
-            "-symbol-graph-minimum-access-level",
-            "-Xswiftc",
-            minimumAccessLevel
+            "--output-path", outputPath.appendingPathComponent(self.name, isDirectory: true).path
         ]
         process.currentDirectoryURL = URL(fileURLWithPath: fm.currentDirectoryPath)
         try process.run()
