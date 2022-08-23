@@ -162,10 +162,11 @@ func parsePath(_ argument: String, relativeTo basePath: URL) -> URL? {
 }
 
 #if os(macOS)
-let swiftBin = "/Users/runner/hostedtoolcache/swift-macOS/5.6.1/x64/usr/bin/swift"
+let swiftBinDefault = "/Users/runner/hostedtoolcache/swift-macOS/5.6.1/x64/usr/bin/swift"
 #else
-let swiftBin = "/opt/hostedtoolcache/swift-Ubuntu/5.6.1/x64/usr/bin/swift"
+let swiftBinDefault = "/opt/hostedtoolcache/swift-Ubuntu/5.6.1/x64/usr/bin/swift"
 #endif
+let swiftBin = parseArg("--swift-bin") ?? swiftBinDefault
 print(swiftBin)
 let currentDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath, isDirectory: true)
 let minimumAccessLevel = parseArg("--minimum-access-level") ?? "public"
