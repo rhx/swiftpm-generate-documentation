@@ -31,10 +31,10 @@ runs:
 
       - name: Generate Documentation
         if: ${{ runner.os == 'Linux' }}
-        run: swift $GITHUB_ACTION_PATH/src/main.swift --hosting-base-path ${{ inputs.hosting-base-path }} --output-path ${{ inputs.output-path }} --working-directory ${{ inputs.working-directory }} --minimum-access-level ${{ inputs.minimum-access-level }}
+        run: swift $GITHUB_ACTION_PATH/src/main.swift --hosting-base-path ${{ inputs.hosting-base-path }} --output-path ${{ inputs.output-path }} --working-directory ${{ inputs.working-directory }} --minimum-access-level ${{ inputs.minimum-access-level }} --swift-bin "`which swift`"
         shell: bash
  
       - name: Generate Documentation
         if: ${{ runner.os == 'macOS' }}
-        run: swift $GITHUB_ACTION_PATH/src/main.swift --hosting-base-path ${{ inputs.hosting-base-path }} --output-path ${{ inputs.output-path }} --working-directory ${{ inputs.working-directory }} --minimum-access-level ${{ inputs.minimum-access-level }} --swift-bin `which swift`
+        run: swift $GITHUB_ACTION_PATH/src/main.swift --hosting-base-path ${{ inputs.hosting-base-path }} --output-path ${{ inputs.output-path }} --working-directory ${{ inputs.working-directory }} --minimum-access-level ${{ inputs.minimum-access-level }} --swift-bin "`which swift`"
         shell: bash
