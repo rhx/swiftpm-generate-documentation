@@ -33,7 +33,7 @@ runs:
 
       - name: Setup Swift
         if: ${{ runner.os == 'Linux' }}
-        uses: actions/setup-swift@v1
+        uses: swift-actions/setup-swift@v1
         with:
           swift-version: ${{ inputs.swift-version }}
 
