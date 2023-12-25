@@ -162,7 +162,7 @@ func parsePath(_ argument: String, relativeTo basePath: URL) -> URL? {
 }
 
 #if os(macOS)
-let swiftBinDefault = "/Users/runner/hostedtoolcache/swift-macOS/5.6.3/x64/usr/bin/swift"
+let swiftBinDefault = "/usr/bin/swift"
 #else
 let swiftBinDefault = "/opt/hostedtoolcache/swift-Ubuntu/5.6.3/x64/usr/bin/swift"
 #endif
