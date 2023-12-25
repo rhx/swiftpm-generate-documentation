@@ -3,7 +3,7 @@ description: Generates a documentation website from a swift package.
 
 inputs:
   output-path:
-    decription: The path containing the generated docs.
+    description: The path containing the generated docs.
     required: false
     default: "./docs"
   working-directory:
