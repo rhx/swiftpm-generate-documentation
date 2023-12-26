@@ -3,7 +3,7 @@ description: Generates a documentation website from a swift package.
 
 inputs:
   output-path:
-    decription: The path containing the generated docs.
+    description: The path containing the generated docs.
     required: false
     default: "./docs"
   working-directory:
@@ -18,14 +18,22 @@ inputs:
     description: The minimum access level that must be included in the docs.
     default: "public"
   swift-version:
-    description: The version of swift used to execute the docC package plugin.
-    required: true
+    description: The version of Xcode/Swift used to execute the docC package plugin.
+    default: latest
 
 runs:
   using: 'composite'
 
   steps:
-      - uses: swift-actions/setup-swift@v1
+      - name: Setup Xcode
+        if: ${{ runner.os == 'macOS' }}
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ inputs.swift-version }}
+
+      - name: Setup Swift
+        if: ${{ runner.os == 'Linux' }}
+        uses: swift-actions/setup-swift@v1
         with:
           swift-version: ${{ inputs.swift-version }}
 

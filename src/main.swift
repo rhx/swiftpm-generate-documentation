@@ -162,7 +162,7 @@ func parsePath(_ argument: String, relativeTo basePath: URL) -> URL? {
 }
 
 #if os(macOS)
-let swiftBinDefault = "/Users/runner/hostedtoolcache/swift-macOS/5.6.3/x64/usr/bin/swift"
+let swiftBinDefault = "/usr/bin/swift"
 #else
 let swiftBinDefault = "/opt/hostedtoolcache/swift-Ubuntu/5.6.3/x64/usr/bin/swift"
 #endif
@@ -172,7 +172,7 @@ let currentDirectory = URL(fileURLWithPath: FileManager.default.currentDirectory
 let minimumAccessLevel = parseArg("--minimum-access-level") ?? "public"
 let hostingBasePath = parseArg("--hosting-base-path").flatMap { $0 == "/" ? nil : $0 }
 let workingDirectory = parsePath("--working-directory", relativeTo: currentDirectory) ?? currentDirectory
-let outputPath = parsePath("--output-path", relativeTo: workingDirectory) ?? workingDirectory.appendingPathComponent("docs", isDirectory: true)
+let outputURL = parsePath("--output-path", relativeTo: workingDirectory) ?? workingDirectory.appendingPathComponent("docs", isDirectory: true)
 
 let fm = FileManager.default
 fm.changeCurrentDirectoryPath(workingDirectory.path)
@@ -188,17 +188,30 @@ do {
     fatalError("Error parsing Package.swift: " + e.localizedDescription)
 }
 do {
-    try FileManager.default.createDirectory(at: outputPath, withIntermediateDirectories: true)
-    try package.generateDocumentation(swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputPath, minimumAccessLevel: minimumAccessLevel)
-    let indexURL = outputPath.appendingPathComponent("index.html", isDirectory: false)
+    try fm.createDirectory(at: outputURL, withIntermediateDirectories: true)
+    try package.generateDocumentation(swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputURL, minimumAccessLevel: minimumAccessLevel)
+    let indexURL = outputURL.appendingPathComponent("index.html", isDirectory: false)
     if package.targets.filter({ $0.type != .unsupported }).count == 1, let first = package.targets.first(where: { $0.type != .unsupported }) {
-        let documentationDirectory = "/" + (hostingBasePath.map { $0 + "/" } ?? "") + first.name + "/documentation"
+        let hostingDirectory = "/" + (hostingBasePath.map { $0 + "/" } ?? "")
+        let documentationDirectory = first.name + "/documentation"
+        let baseDirectory = documentationDirectory + "/" + first.name.lowercased()
+        let packageDirectory = baseDirectory + "/package"
+        let packageIndex = packageDirectory + "/index.html"
+        let packageIndexPath = outputURL.path + "/" + packageIndex
+        let redirectionPath: String
+        if fm.fileExists(atPath: packageIndexPath) {
+            redirectionPath = hostingDirectory + packageDirectory
+            print("Redirecting to '\(redirectionPath)'.")
+        } else {
+            redirectionPath = hostingDirectory + baseDirectory
+            print("\(packageIndexPath) not found, redirecting to '\(redirectionPath)'.")
+        }
         let content = """
             <!DOCTYPE html>
             <html lang="en">
             <head>
                 <title>\(first.name)</title>
-                <meta http-equiv = "refresh" content = "0; url = \(documentationDirectory)/\(first.name.lowercased())" />
+                <meta http-equiv = "refresh" content = "0; url = \(redirectionPath)" />
             </head>
             <body>
                 <p>Redirecting</p>
