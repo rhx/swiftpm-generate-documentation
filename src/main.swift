@@ -172,7 +172,7 @@ let currentDirectory = URL(fileURLWithPath: FileManager.default.currentDirectory
 let minimumAccessLevel = parseArg("--minimum-access-level") ?? "public"
 let hostingBasePath = parseArg("--hosting-base-path").flatMap { $0 == "/" ? nil : $0 }
 let workingDirectory = parsePath("--working-directory", relativeTo: currentDirectory) ?? currentDirectory
-let outputPath = parsePath("--output-path", relativeTo: workingDirectory) ?? workingDirectory.appendingPathComponent("docs", isDirectory: true)
+let outputURL = parsePath("--output-path", relativeTo: workingDirectory) ?? workingDirectory.appendingPathComponent("docs", isDirectory: true)
 
 let fm = FileManager.default
 fm.changeCurrentDirectoryPath(workingDirectory.path)
@@ -188,16 +188,16 @@ do {
     fatalError("Error parsing Package.swift: " + e.localizedDescription)
 }
 do {
-    try fm.createDirectory(at: outputPath, withIntermediateDirectories: true)
-    try package.generateDocumentation(swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputPath, minimumAccessLevel: minimumAccessLevel)
-    let indexURL = outputPath.appendingPathComponent("index.html", isDirectory: false)
+    try fm.createDirectory(at: outputURL, withIntermediateDirectories: true)
+    try package.generateDocumentation(swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputURL, minimumAccessLevel: minimumAccessLevel)
+    let indexURL = outputURL.appendingPathComponent("index.html", isDirectory: false)
     if package.targets.filter({ $0.type != .unsupported }).count == 1, let first = package.targets.first(where: { $0.type != .unsupported }) {
         let documentationDirectory = "/" + (hostingBasePath.map { $0 + "/" } ?? "") + first.name + "/documentation"
         let baseDirectory = documentationDirectory + "/" + first.name.lowercased()
         let packageDirectory = baseDirectory + "/package"
         let packageIndex = packageDirectory + "/index.html"
         let redirectionPath: String
-        if fm.fileExists(atPath: outputPath + packageIndex) {
+        if fm.fileExists(atPath: outputURL.path + packageIndex) {
             redirectionPath = packageIndex
         } else {
             redirectionPath = baseDirectory
