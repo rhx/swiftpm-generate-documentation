@@ -188,17 +188,26 @@ do {
     fatalError("Error parsing Package.swift: " + e.localizedDescription)
 }
 do {
-    try FileManager.default.createDirectory(at: outputPath, withIntermediateDirectories: true)
+    try fm.createDirectory(at: outputPath, withIntermediateDirectories: true)
     try package.generateDocumentation(swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputPath, minimumAccessLevel: minimumAccessLevel)
     let indexURL = outputPath.appendingPathComponent("index.html", isDirectory: false)
     if package.targets.filter({ $0.type != .unsupported }).count == 1, let first = package.targets.first(where: { $0.type != .unsupported }) {
         let documentationDirectory = "/" + (hostingBasePath.map { $0 + "/" } ?? "") + first.name + "/documentation"
+        let baseDirectory = documentationDirectory + "/" + first.name.lowercased()
+        let packageDirectory = baseDirectory + "/package"
+        let packageIndex = packageDirectory + "/index.html"
+        let redirectionPath: String
+        if fm.fileExists(atPath: packageIndex) {
+            redirectionPath = packageIndex
+        } else {
+            redirectionPath = baseDirectory
+        }
         let content = """
             <!DOCTYPE html>
             <html lang="en">
             <head>
                 <title>\(first.name)</title>
-                <meta http-equiv = "refresh" content = "0; url = \(documentationDirectory)/\(first.name.lowercased())" />
+                <meta http-equiv = "refresh" content = "0; url = \(redirectionPath)" />
             </head>
             <body>
                 <p>Redirecting</p>
