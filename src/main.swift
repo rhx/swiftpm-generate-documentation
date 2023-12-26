@@ -200,7 +200,7 @@ do {
         let packageIndexPath = outputURL.path + "/" + packageIndex
         let redirectionPath: String
         if fm.fileExists(atPath: packageIndexPath) {
-            redirectionPath = hostingDirectory + packageIndex
+            redirectionPath = hostingDirectory + packageDirectory
             print("Redirecting to '\(redirectionPath)'.")
         } else {
             redirectionPath = hostingDirectory + baseDirectory
