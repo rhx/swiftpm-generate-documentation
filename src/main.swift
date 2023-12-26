@@ -197,7 +197,7 @@ do {
         let packageDirectory = baseDirectory + "/package"
         let packageIndex = packageDirectory + "/index.html"
         let redirectionPath: String
-        if fm.fileExists(atPath: packageIndex) {
+        if fm.fileExists(atPath: outputPath + packageIndex) {
             redirectionPath = packageIndex
         } else {
             redirectionPath = baseDirectory
