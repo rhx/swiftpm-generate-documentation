@@ -192,17 +192,18 @@ do {
     try package.generateDocumentation(swiftBin: swiftBin, hostingBasePath: hostingBasePath, outputPath: outputURL, minimumAccessLevel: minimumAccessLevel)
     let indexURL = outputURL.appendingPathComponent("index.html", isDirectory: false)
     if package.targets.filter({ $0.type != .unsupported }).count == 1, let first = package.targets.first(where: { $0.type != .unsupported }) {
-        let documentationDirectory = "/" + (hostingBasePath.map { $0 + "/" } ?? "") + first.name + "/documentation"
+        let hostingDirectory = "/" + (hostingBasePath.map { $0 + "/" } ?? "")
+        let documentationDirectory = first.name + "/documentation"
         let baseDirectory = documentationDirectory + "/" + first.name.lowercased()
         let packageDirectory = baseDirectory + "/package"
         let packageIndex = packageDirectory + "/index.html"
-        let packageIndexPath = outputURL.path + packageIndex
+        let packageIndexPath = outputURL.path + "/" + packageIndex
         let redirectionPath: String
         if fm.fileExists(atPath: packageIndexPath) {
-            redirectionPath = packageIndex
+            redirectionPath = hostingDirectory + packageIndex
             print("Redirecting to '\(redirectionPath)'.")
         } else {
-            redirectionPath = baseDirectory
+            redirectionPath = hostingDirectory + baseDirectory
             print("\(packageIndexPath) not found, redirecting to '\(redirectionPath)'.")
         }
         let content = """
