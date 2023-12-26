@@ -196,11 +196,14 @@ do {
         let baseDirectory = documentationDirectory + "/" + first.name.lowercased()
         let packageDirectory = baseDirectory + "/package"
         let packageIndex = packageDirectory + "/index.html"
+        let packageIndexPath = outputURL.path + packageIndex
         let redirectionPath: String
-        if fm.fileExists(atPath: outputURL.path + packageIndex) {
+        if fm.fileExists(atPath: packageIndexPath) {
             redirectionPath = packageIndex
+            print("Redirecting to '\(redirectionPath)'.")
         } else {
             redirectionPath = baseDirectory
+            print("\(packageIndexPath) not found, redirecting to '\(redirectionPath)'.")
         }
         let content = """
             <!DOCTYPE html>
