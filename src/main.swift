@@ -146,7 +146,8 @@ struct Target: Hashable, Decodable {
         try process.run()
         process.waitUntilExit()
         guard process.terminationStatus == 0 else {
-            fatalError("Unable to generate documentation for target \(self.name)")
+            print("*** Warning: Unable to generate documentation for target \(self.name)")
+            return
         }
     }
 
