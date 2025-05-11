@@ -9,7 +9,7 @@ Create GitHub Pages Documentation using DocC
     <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux-darkgreen" alt="Supports macOS and Linux" />
   </a>
   <a href="https://swift.org">
-    <img src="https://img.shields.io/badge/Swift-5.9-F05138?logo=swift&logoColor=white" alt="Swift 5.9" />
+    <img src="https://img.shields.io/badge/Swift-5.10-F05138?logo=swift&logoColor=white" alt="Swift 5.10" />
   </a>
   <a href="https://github.com/mipalgu/swiftpm-generate-documentation/releases/latest">
     <img src="https://img.shields.io/github/v/release/mipalgu/swiftpm-generate-documentation?sort=semver" alt="Latest release" />
@@ -32,7 +32,7 @@ A specific Xcode or Swift version can be set using the `swift-version` input:
 ```yaml
 - uses: mipalgu/swiftpm-generate-documentation@main
   with:
-    swift-version: "5.9"
+    swift-version: "5.10"
 ```
 
 The following section shows the input parameter variables that can be configured.
@@ -82,7 +82,7 @@ available for that major and minor version.
 In other words specifying...
 - `"5.9.0"` will resolve to version `5.9`
 - `"5.9"` will resolve to latest patch version (e.g. `5.9.2`)
-- `"5"` will resolve to latest minor and patch version (e.g. `5.9.x`)
+- `"5"` will resolve to latest minor and patch version (e.g. `5.10.x`)
 
 ### Caveats
 
